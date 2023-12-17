@@ -5,7 +5,6 @@ namespace ASPDotnetFC.Dto
     public class ClubDto
 
     {
-        //essas são as propriedades que o usuário poderá interagir 
         public int Id { get; set; }
         public required string FullName { get; set; } = string.Empty;
         public required string Name { get; set; }
@@ -13,8 +12,8 @@ namespace ASPDotnetFC.Dto
         public string? UrlImage { get; set; }
         public required int FoundationYear { get; set; }
         public required string Country { get; set; } = string.Empty;
-        public virtual required Player TopScorer { get; set; }
-        public virtual required Stadium Stadium { get; set; }
+        public virtual required Player? TopScorer { get; set; }
+        public virtual required Stadium? Stadium { get; set; }
 
     }
 }

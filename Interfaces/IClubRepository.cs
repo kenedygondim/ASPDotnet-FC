@@ -18,9 +18,14 @@ namespace ASPDotnetFC.Interface
 
         Stadium GetStadium(int Id);
 
-        bool CreateClub(int competitionId, Club club);
+        bool CreateClubWithCompetition(int competitionId, Club club);
+
+        bool CreateClub(Club club);
+
+        bool AssociateClubStadium(Club club, Stadium stadium);
 
         bool UpdateClub(Club club);
+
             
         bool DeleteClub(Club club);
 

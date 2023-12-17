@@ -67,7 +67,7 @@ namespace ASPDotnetFC.Repository
         }
 
         //POST METHOD
-        public bool CreateClub(int competitionId, Club club)
+        public bool CreateClubWithCompetition(int competitionId, Club club)
         {
             
             var clubCompetitionEntity = _context.Competitions.Find(competitionId);
@@ -91,6 +91,14 @@ namespace ASPDotnetFC.Repository
             return Save();
         }
 
+        public bool CreateClub(Club club)
+        {
+            _context.Add(club);
+            return Save();
+        }
+
+
+
         
         //UPDATE method
         public bool UpdateClub(Club club)
@@ -112,5 +120,11 @@ namespace ASPDotnetFC.Repository
             var saved = _context.SaveChanges();
             return saved > 0;
             }
+
+        public bool AssociateClubStadium(Club club, Stadium stadium)
+        {
+            club.Stadium = stadium;
+            return Save();
+        }
     }
 }

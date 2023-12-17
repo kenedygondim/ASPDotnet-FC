@@ -3,6 +3,8 @@ using ASPDotnetFC.Models;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using ASPDotnetFC.Dto;
+using aspdotnetfc_api.Repositories;
+using aspdotnetfc_api.Interfaces;
 
 namespace ASPDotnetFC.Controllers
 {
@@ -11,13 +13,12 @@ namespace ASPDotnetFC.Controllers
     public class ClubsController : ControllerBase
     {
         private readonly IClubRepository _clubRepository;
-
-        //nesse caso o auto mapper vai ajudar a selecionar as informações que queremos que o usuário veja
-        //arquivos Dto's e MappingProfiles
+        private readonly IStadiumRepository _stadiumRepository;
         private readonly IMapper _mapper;
 
-        public ClubsController(IClubRepository clubRepository, IMapper mapper)
+        public ClubsController(IClubRepository clubRepository, IMapper mapper, IStadiumRepository stadiumRepository)
         {
+            _stadiumRepository = stadiumRepository;
             _clubRepository = clubRepository;
             _mapper = mapper;
 
@@ -213,7 +214,7 @@ namespace ASPDotnetFC.Controllers
             var clubMap = _mapper.Map<Club>(clubCreate);
 
             //chamada da função dentro do if
-            if (!_clubRepository.CreateClub(competitionId, clubMap))
+            if (!_clubRepository.CreateClubWithCompetition(competitionId, clubMap))
             {
                 ModelState.AddModelError("", "Algo deu errado durante o salvamento =(");
                 return StatusCode(500, ModelState);
@@ -229,6 +230,82 @@ namespace ASPDotnetFC.Controllers
             }
             catch (Exception ex) { return BadRequest(ex.Message); };
         }
+
+        [HttpPost]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        public IActionResult CreateClub([FromBody] Club clubCreate)
+        {
+            if (clubCreate == null)
+                return BadRequest();
+
+
+            var clubs = _clubRepository.GetClubs();
+
+            var checkclub = clubs.Where(
+                l => l.Name.Trim().ToUpper() == clubCreate.Name.TrimEnd().ToUpper()
+                ).FirstOrDefault();
+
+            if (checkclub != null)
+            {
+                ModelState.AddModelError("", "Esse time já existe!");
+                return StatusCode(422, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            var clubMap = _mapper.Map<Club>(clubCreate);
+
+            if (!_clubRepository.CreateClub(clubMap))
+            {
+                ModelState.AddModelError("", "Algo deu errado durante o salvamento =(");
+                return StatusCode(500, ModelState);
+            }
+
+
+            try
+            {
+                return Ok(clubMap);
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); };
+
+        }
+
+
+
+        [HttpPut("api/[controller]/club/{clubId}/stadium/{stadiumId}/associate")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+
+        public IActionResult AssociateClubStadium([FromRoute] int stadiumId, [FromRoute] int clubId)
+        {
+            var club = _clubRepository.GetClubById(clubId);
+            var stadium = _stadiumRepository.GetStadiumById(stadiumId);
+
+            if (club == null || stadium == null ) 
+            {
+                return NotFound(ModelState);
+            }
+
+            if(club.Stadium != null)
+            {
+                return BadRequest("Já existe um estádio associado a essa clube");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            _clubRepository.AssociateClubStadium(club, stadium);
+
+            return Ok("Sucesso");
+        }
+
 
 
         [HttpPut("{clubId}")]
@@ -282,10 +359,5 @@ namespace ASPDotnetFC.Controllers
 
             return Ok("Clube excluído");
         } 
-
-
-
-
-
     }
 }

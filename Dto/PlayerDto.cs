@@ -14,7 +14,7 @@ namespace ASPDotnetFC.Dto
         public required string Birth { get; set; }
         public required string Position { get; set; }
         public required string Country { get; set; }
-        public required double Heigth { get; set; }
-        public required string BestFoot { get; set; }
+        public double? Heigth { get; set; }
+        public string? BestFoot { get; set; }
     }
 }

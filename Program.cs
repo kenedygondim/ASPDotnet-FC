@@ -4,6 +4,8 @@ using ASPDotnetFC.Repository;
 using ASPDotnetFC.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using aspdotnetfc_api.Interfaces;
+using aspdotnetfc_api.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,8 @@ builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.Re
 builder.Services.AddScoped<IClubRepository, ClubRepository>();
 builder.Services.AddScoped<ICompetitionRepository, CompetitionRepository>();
 builder.Services.AddScoped<IClubCompetitionsRepository, ClubCompetitionsRepository>();
+builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
+builder.Services.AddScoped<IStadiumRepository, StadiumRepository>();
 builder.Services.AddEndpointsApiExplorer();
 
 

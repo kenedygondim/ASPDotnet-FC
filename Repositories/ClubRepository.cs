@@ -36,36 +36,6 @@ namespace ASPDotnetFC.Repository
             return _context.Clubs.Where(c => c.Name == name).FirstOrDefault();
         }
 
-        public string GetCountryName(int id)
-        {
-            var club = _context.Clubs.Where(c => c.Id == id).FirstOrDefault();
-
-            if(club == null)
-            {
-                return "Não encontrado.";
-            }
-
-            return club.Country;
-        }
-
-        public int GetFoundationYear(int id)
-        {
-            var club = _context.Clubs.Where(c => c.Id == id).FirstOrDefault();
-
-            if (club == null)
-            {
-                return 0;
-            }
-
-            return club.FoundationYear;
-        }
-
-        public Stadium GetStadium(int id)
-        {
-            var club = _context.Clubs.Where(c => c.Id == id).FirstOrDefault();
-            return club.Stadium;
-        }
-
         //POST METHOD
         public bool CreateClubWithCompetition(int competitionId, Club club)
         {

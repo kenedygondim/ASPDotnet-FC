@@ -1,11 +1,7 @@
 ﻿using ASPDotnetFC.Dto;
-using ASPDotnetFC.Interface;
 using ASPDotnetFC.Models;
-using ASPDotnetFC.Repository;
 using aspdotnetfc_api.Interfaces;
-using aspdotnetfc_api.Repositories;
 using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace aspdotnetfc_api.Controllers
@@ -28,181 +24,173 @@ namespace aspdotnetfc_api.Controllers
         [ProducesResponseType(400)]
         public IActionResult GetStadiums()
         {
-            var stadiums = _mapper.Map<List<StadiumDto>>(_stadiumRepository.GetStadiums());
-
-            if(stadiums == null)
+            try
             {
-                return NotFound(ModelState);
-            }
+                var stadiums = _mapper.Map<List<StadiumDto>>(_stadiumRepository.GetStadiums());
 
-            if(!ModelState.IsValid) 
+                if(stadiums == null)
+                    return NotFound("Nenhum estádio encontrado!");
+
+                if(!ModelState.IsValid) 
+                    return BadRequest(ModelState);
+
+                return Ok(stadiums);
+            }
+            catch (Exception ex)
             {
-                return BadRequest(ModelState);
+                return BadRequest(ex.Message);
             }
-
-            return Ok(stadiums);
         }
 
         [HttpGet("{stadiumId}")]
-        [ProducesResponseType(200)]
+        [ProducesResponseType(200, Type = typeof(Stadium))]
         [ProducesResponseType(400)]
         public IActionResult GetStadiumById([FromRoute] int stadiumId)
         {
-            var stadium = _mapper.Map<StadiumDto>(_stadiumRepository.GetStadiumById(stadiumId));
-
-            if (stadium == null)
-            {
-                return NotFound(ModelState);
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            return Ok(stadium);
-        }
-
-        [HttpGet("{stadiumName}/name")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
-
-        public IActionResult GetClubByName([FromRoute] string stadiumName)
-        {
-
-            //deixa a primeira letra da string maiúscula
-            string stringFormatted = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(stadiumName);
-
-            var stadium = _mapper.Map<StadiumDto>(_stadiumRepository.GetStadiumByName(stringFormatted));
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
-            if (stadium == null)
-            {
-                return NotFound();
-            }
-
             try
-            {
+            { 
+                var stadium = _mapper.Map<StadiumDto>(_stadiumRepository.GetStadiumById(stadiumId));
+
+                if (stadium == null)
+                    return NotFound("Estádio não encontrado!");
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
                 return Ok(stadium);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return BadRequest(ex.Message);
             }
+           
         }
 
-        //POST
+        [HttpGet("{stadiumName}/name")]
+        [ProducesResponseType(200, Type = typeof(Stadium))]
+        [ProducesResponseType(400)]
+
+        public IActionResult GetClubByName([FromRoute] string stadiumName)
+        {
+            try
+            {
+                string stringFormatted = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(stadiumName);
+                var stadium = _mapper.Map<StadiumDto>(_stadiumRepository.GetStadiumByName(stringFormatted));
+
+                if (stadium == null)
+                    return NotFound("Estádio não encontrado!");
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                return Ok(stadium);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
         [HttpPost]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
+        [ProducesResponseType(409)]
         public IActionResult CreateCompetition([FromBody] Stadium stadiumCreate)
         {
-            if (stadiumCreate == null)
-                return BadRequest();
-
-
-            var stadiums = _stadiumRepository.GetStadiums();
-
-            var checkStadium = stadiums.Where(
-                l => l.Name.Trim().ToUpper() == stadiumCreate.Name.TrimEnd().ToUpper()
-                ).FirstOrDefault();
-
-            if (checkStadium != null)
-            {
-                ModelState.AddModelError("", "Esse estádio já existe!");
-                return StatusCode(422, ModelState);
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
-            var stadiumMap = _mapper.Map<Stadium>(stadiumCreate);
-
-            if (!_stadiumRepository.CreateStadium(stadiumMap))
-            {
-                ModelState.AddModelError("", "Algo deu errado durante o salvamento =(");
-                return StatusCode(500, ModelState);
-            }
-
-
             try
             {
+                if (stadiumCreate == null)
+                    return BadRequest(ModelState);
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var stadiums = _stadiumRepository.GetStadiums();
+                var checkStadium = stadiums.Where(l => l.Name.Trim().ToUpper() == stadiumCreate.Name.TrimEnd().ToUpper()).FirstOrDefault();
+
+                if (checkStadium != null)
+                    return Conflict("Esse estádio já existe!");
+
+                var stadiumMap = _mapper.Map<Stadium>(stadiumCreate);
+
+                if (!_stadiumRepository.CreateStadium(stadiumMap))
+                {
+                    ModelState.AddModelError("", "Algo deu errado durante o salvamento =(");
+                    return StatusCode(500, ModelState);
+                }
                 return Ok(stadiumMap);
             }
-            catch (Exception ex) { return BadRequest(ex.Message); };
-
+            catch (Exception ex) 
+            {
+                return BadRequest(ex.Message); 
+            }
         }
-
-
-      
-
 
         [HttpPut("{stadiumId}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public IActionResult UpdateStadium(int stadiumId, [FromBody] StadiumDto updatedStadium)
+        public IActionResult UpdateStadium([FromRoute] int stadiumId, [FromBody] StadiumDto updatedStadium)
         {
-
-            if (stadiumId != updatedStadium.Id)
-                return NotFound(ModelState);
-
-            if (updatedStadium == null)
-                return BadRequest(ModelState);  
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var stadiumMap = _mapper.Map<Stadium>(updatedStadium);
-
-            if (!_stadiumRepository.UpdateStadium(stadiumMap))
+            try
             {
-                ModelState.AddModelError("", "Ocorreu um erro na sua tentativa de atualizar o estádio!");
-                return StatusCode(500, ModelState);
+                if (stadiumId != updatedStadium.Id)
+                     return NotFound(ModelState);
+
+                if (updatedStadium == null)
+                    return BadRequest(ModelState);  
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var stadiumMap = _mapper.Map<Stadium>(updatedStadium);
+
+                if (!_stadiumRepository.UpdateStadium(stadiumMap))
+                {
+                    ModelState.AddModelError("", "Ocorreu um erro na sua tentativa de atualizar o estádio!");
+                    return StatusCode(500, ModelState);
+                }
+
+                return Ok("Estádio atualizado com sucesso!");
             }
 
-            return Ok("Estádio atualizado com sucesso!");
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
 
         [HttpDelete("{stadiumId}")]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(400)]
         [ProducesResponseType(200)]
-        public IActionResult DeleteStadium(int stadiumId)
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        
+        public IActionResult DeleteStadium([FromRoute] int stadiumId)
         {
-            var stadium = _stadiumRepository.GetStadiumById(stadiumId);
-
-            if (stadium == null)
-                return NotFound(ModelState);
-
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (!_stadiumRepository.DeleteStadium(stadium))
+            try
             {
-                ModelState.AddModelError("", "Algo deu errado durante a exclusão.");
-                return StatusCode(500, ModelState);
+                var stadium = _stadiumRepository.GetStadiumById(stadiumId);
+
+                if (stadium == null)
+                    return NotFound("Estádio não encontrado!");
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                if (!_stadiumRepository.DeleteStadium(stadium))
+                {
+                    ModelState.AddModelError("", "Algo deu errado durante a exclusão.");
+                    return StatusCode(500, ModelState);
+                }
+
+                return Ok("Estádio excluído");
             }
-
-            return Ok("Estádio excluído");
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            
         }
-
-
-
-
-
-
-
-
-
     }
 }

@@ -16,43 +16,17 @@ namespace ASPDotnetFC.Repository
             _context.Database.EnsureCreated();
         }
 
-     
         //GET METHODS
-        public string GetCountryCompetition(int id)
-        {
-            var competition = _context.Competitions.Where(c => c.Id == id).FirstOrDefault();
-
-            if (competition == null)
-            {
-                return "Não encontrado.";
-            }
-
-            return competition.Country;
-        }
-
-        public Competition GetCompetition(int id)
-        {
-            return _context.Competitions.Where(l => l.Id == id).FirstOrDefault();
-        }
 
         public ICollection<Competition> GetCompetitions()
         {
             return _context.Competitions.Include(c => c.ClubCompetitions).ThenInclude(cl => cl.Club).ToList();
         }
 
-        public int GetNumberOfTeams(int id)
-
+        public Competition GetCompetition(int id)
         {
-            var competition = _context.Competitions.Where(l => l.Id == id).FirstOrDefault();
-
-            if (competition == null)
-            {
-                return 0;
-            }
-
-            return competition.NumberOfTeams;
+            return _context.Competitions.Where(l => l.Id == id).FirstOrDefault();
         }
-
 
         //POST METHODS
         public bool CreateCompetition(Competition competition)

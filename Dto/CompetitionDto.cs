@@ -1,4 +1,6 @@
-﻿namespace ASPDotnetFC.Dto
+﻿using ASPDotnetFC.Models;
+
+namespace ASPDotnetFC.Dto
 {
     public class CompetitionDto 
     {
@@ -10,5 +12,6 @@
         public required string FirstEdition { get; set; }
         public required bool IsContinental { get; set; }
         public required bool IsWorldwide { get; set; }
+
     }
 }

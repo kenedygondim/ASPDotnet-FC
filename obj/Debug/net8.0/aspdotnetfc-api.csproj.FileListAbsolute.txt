@@ -136,3 +136,4 @@ C:\Users\kened\OneDrive\Documentos\C#\aspdotnetfc-api\aspdotnetfc-api\obj\Debug\
 C:\Users\kened\OneDrive\Documentos\C#\aspdotnetfc-api\aspdotnetfc-api\obj\Debug\net8.0\aspdotnetfc-api.pdb
 C:\Users\kened\OneDrive\Documentos\C#\aspdotnetfc-api\aspdotnetfc-api\obj\Debug\net8.0\aspdotnetfc-api.genruntimeconfig.cache
 C:\Users\kened\OneDrive\Documentos\C#\aspdotnetfc-api\aspdotnetfc-api\obj\Debug\net8.0\ref\aspdotnetfc-api.dll
+C:\Users\kened\OneDrive\Documentos\C#\aspdotnetfc-api\aspdotnetfc-api\obj\Debug\net8.0\aspdotnetfc-api.sourcelink.json

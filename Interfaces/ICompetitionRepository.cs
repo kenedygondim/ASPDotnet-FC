@@ -8,10 +8,6 @@ namespace ASPDotnetFC.Interface
 
         Competition GetCompetition(int id);
 
-        int GetNumberOfTeams(int id);
-
-        string GetCountryCompetition(int id);
-
         bool CreateCompetition(Competition competition);
 
         bool UpdateCompetition(Competition competition);

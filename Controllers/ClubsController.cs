@@ -5,6 +5,7 @@ using AutoMapper;
 using ASPDotnetFC.Dto;
 using aspdotnetfc_api.Repositories;
 using aspdotnetfc_api.Interfaces;
+using System.Diagnostics.Metrics;
 
 namespace ASPDotnetFC.Controllers
 {
@@ -24,101 +25,76 @@ namespace ASPDotnetFC.Controllers
 
         }
 
-        //!!!!!!!!!!!!!!!!!!!!! GET !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        //Retorna todos os clubes do banco de dados
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Club>))]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<ClubDto>))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
         public IActionResult GetClubs()
         {
-            var clubs = _mapper.Map<List<ClubDto>>(_clubRepository.GetClubs());
-
-            if (!ModelState.IsValid)
-            {
-                return NotFound(ModelState);
-            }
-
-
-            return Ok(clubs);
-        }
-
-        //Retorna um clubes específico com base no Id
-        [HttpGet("{clubId}")]
-        [ProducesResponseType(200, Type = typeof(Club))]
-        [ProducesResponseType(400)]
-        public IActionResult GetClubById(int clubId)
-        {
-            var club = _mapper.Map<ClubDto>(_clubRepository.GetClubById(clubId));
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
-            if (club == null)
-            {
-                return NotFound();
-            }
-
             try
             {
+                var clubs = _mapper.Map<List<ClubDto>>(_clubRepository.GetClubs());
+
+                if (!ModelState.IsValid)
+                    return NotFound(ModelState);
+
+                return Ok(clubs);
+            }
+
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+
+        }
+
+        [HttpGet("{clubId}")]
+        [ProducesResponseType(200, Type = typeof(ClubDto))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public IActionResult GetClubById([FromRoute] int clubId)
+        {
+            try 
+            {
+                var club = _mapper.Map<ClubDto>(_clubRepository.GetClubById(clubId));
+
+                if (club == null)
+                    return NotFound("Clube não encontrado!");
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
                 return Ok(club);
             }
+
             catch (Exception ex)
             {
                 return BadRequest(ex);
             }
         }
 
-        [HttpGet("{ClubId}/competitions")]
-        [ProducesResponseType(200)]
+        [HttpGet("{clubName}/name")]
+        [ProducesResponseType(200, Type = typeof(ClubDto))]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public IActionResult GetCompetitionsByClub([FromRoute] int ClubId)
-        {
-            var club = _clubRepository.GetClubById(ClubId);
-
-            if (club == null)
-                return NotFound(ModelState);
-
-            if (!ModelState.IsValid)  
-                return BadRequest(ModelState);
-
-            var competitions = _clubRepository.GetCompetitions(club);
-
-            return Ok(competitions);
-        }
-
-
-
-
-        //Retorna um clubes específico com base no nome
-        [HttpGet("{clubname}/name")]
-        [ProducesResponseType(200, Type = typeof(Club))]
-        [ProducesResponseType(400)]
 
         public IActionResult GetClubByName([FromRoute] string clubname)
         {
-
-            //deixa a primeira letra da string maiúscula
-            string stringFormatted = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(clubname);
-
-            var club = _mapper.Map<ClubDto>(_clubRepository.GetClubByName(stringFormatted));
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
-            if (club == null)
-            {
-                return NotFound();
-            }
-
             try
             {
+                string stringFormatted = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(clubname);
+
+                var club = _mapper.Map<ClubDto>(_clubRepository.GetClubByName(stringFormatted));
+
+                if (club == null)
+                    return NotFound("Clube não encontrado!");
+
+                if (!ModelState.IsValid)      
+                    return BadRequest(ModelState);            
+            
                 return Ok(club);
             }
+
             catch (Exception ex)
             {
                 return BadRequest(ex);
@@ -126,184 +102,173 @@ namespace ASPDotnetFC.Controllers
         }
 
 
-        [HttpGet("{clubId}/clubCountry")]
-        [ProducesResponseType(200, Type = typeof(string))]
+        [HttpGet("{clubId}/clubCompetitions")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<CompetitionDto>))]
         [ProducesResponseType(400)]
-        public IActionResult GetClubCountry(int clubId)
+        [ProducesResponseType(404)]
+        public IActionResult GetCompetitionsByClub([FromRoute] int clubId)
         {
-            var country = _clubRepository.GetCountryName(clubId);
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-
-            if (country == null)
-                return NotFound();
-
-            try { return Ok(country); }
-            catch (Exception ex) { return BadRequest(ex.Message); };
-        }
-
-        [HttpGet("{clubId}/clubfoundationyear")]
-        [ProducesResponseType(200, Type = typeof(int))]
-        [ProducesResponseType(400)]
-        public IActionResult GetFoundationYear(int clubId)
-        {
-            var foundationYear = _clubRepository.GetFoundationYear(clubId);
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            try { return Ok(foundationYear); }
-            catch (Exception ex) { return BadRequest(ex.Message); };
-        }
-
-
-
-        [HttpGet("{clubId}/clubstadium")]
-        [ProducesResponseType(200, Type = typeof(Stadium))]
-        [ProducesResponseType(400)]
-        public IActionResult GetClubStadium(int clubId)
-        {
-            var stadium = _clubRepository.GetStadium(clubId);
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-
-            if (stadium == null)
-                return NotFound();
-
-            try { return Ok(stadium); }
-            catch (Exception ex) { return BadRequest(ex.Message); };
-        }
-
-
-        [HttpPost("{competitionId}/addclub")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        public IActionResult CreateClub([FromRoute] int competitionId, [FromBody] ClubDto clubCreate)
-
-        {
-
-            if (clubCreate == null)
-                return BadRequest(ModelState);
-
-            //recebe todas as ligas
-            var clubs = _clubRepository.GetClubs();
-
-            //verifica se a liga já existe:
-            var checkClubExists = clubs.Where(
-                l => l.Name.Trim().ToUpper() == clubCreate.Name.TrimEnd().ToUpper()
-                ).FirstOrDefault();
-
-            //Se a liga já existir, o erro é lançado
-            if (checkClubExists != null)
-            {
-                ModelState.AddModelError("", "Esse time já existe!");
-                return StatusCode(422, ModelState);
-            }
-
-            //se os dados inseridos não estiverem no padrão correto é lançado um 400
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            //ocorre o mapeamento/'conversão' do clube criado para o modelo original de Club
-            var clubMap = _mapper.Map<Club>(clubCreate);
-
-            //chamada da função dentro do if
-            if (!_clubRepository.CreateClubWithCompetition(competitionId, clubMap))
-            {
-                ModelState.AddModelError("", "Algo deu errado durante o salvamento =(");
-                return StatusCode(500, ModelState);
-            }
-
-
             try
             {
-                //esse método retorna um código de criação 204
-                //parâmetros:
-                //nome do método    //parâmetro de rota do controllador  //Clube criado
+                var club = _clubRepository.GetClubById(clubId);
+
+                if (club == null)
+                    return NotFound(ModelState);
+
+                if (!ModelState.IsValid)  
+                    return BadRequest(ModelState);
+
+                var competitions = _clubRepository.GetCompetitions(club);
+
+                return Ok(competitions);
+            }
+
+            catch(Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
+
+        [HttpGet("{clubId}/clubStadium")]
+        [ProducesResponseType(200, Type = typeof(Stadium))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public IActionResult GetClubStadium([FromRoute] int clubId)
+        {
+            try 
+            {
+                var clubStadium = _clubRepository.GetClubById(clubId);
+
+                if (clubStadium == null)
+                    return NotFound("Estadio não encontrado!");
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                return Ok(clubStadium.Stadium); 
+            }
+
+            catch (Exception ex) 
+            {
+                return BadRequest(ex.Message); 
+            }
+        }
+
+
+        [HttpPost("{competitionId}/addClub")]
+        [ProducesResponseType(204, Type = typeof(ClubDto))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(409)]
+        public IActionResult CreateClubWithCompetition([FromRoute] int competitionId, [FromBody] ClubDto clubCreate)
+        {
+            try
+            {
+                if (clubCreate == null)
+                return BadRequest(ModelState);
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var clubs = _clubRepository.GetClubs();
+                var checkClubExists = clubs.Where(club => club.Name.Trim().ToUpper() == clubCreate.Name.TrimEnd().ToUpper())
+                    .FirstOrDefault();
+
+                if (checkClubExists != null)
+                    return Conflict("Esse clube já existe!");
+
+                var clubMap = _mapper.Map<Club>(clubCreate);
+
+                if (!_clubRepository.CreateClubWithCompetition(competitionId, clubMap))
+                {
+                    ModelState.AddModelError("", "Algo deu errado durante o salvamento =(");
+                    return StatusCode(500, ModelState);
+                }
+
                 return CreatedAtAction(nameof(GetClubById), new { clubId = clubCreate.Id }, clubCreate);
             }
-            catch (Exception ex) { return BadRequest(ex.Message); };
+            catch (Exception ex) 
+            {
+                return BadRequest(ex.Message); 
+            }
         }
 
         [HttpPost]
-        [ProducesResponseType(204)]
+        [ProducesResponseType(204, Type = typeof(ClubDto))]
         [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(409)]
         public IActionResult CreateClub([FromBody] Club clubCreate)
         {
-            if (clubCreate == null)
-                return BadRequest();
-
-
-            var clubs = _clubRepository.GetClubs();
-
-            var checkclub = clubs.Where(
-                l => l.Name.Trim().ToUpper() == clubCreate.Name.TrimEnd().ToUpper()
-                ).FirstOrDefault();
-
-            if (checkclub != null)
-            {
-                ModelState.AddModelError("", "Esse time já existe!");
-                return StatusCode(422, ModelState);
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
-            var clubMap = _mapper.Map<Club>(clubCreate);
-
-            if (!_clubRepository.CreateClub(clubMap))
-            {
-                ModelState.AddModelError("", "Algo deu errado durante o salvamento =(");
-                return StatusCode(500, ModelState);
-            }
-
-
             try
             {
-                return Ok(clubMap);
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); };
+                if (clubCreate == null || !ModelState.IsValid)
+                    return BadRequest(ModelState);
 
+                var clubs = _clubRepository.GetClubs();
+
+                var checkclub = clubs.Where(
+                    l => l.Name.Trim().ToUpper() == clubCreate.Name.TrimEnd().ToUpper()).
+                    FirstOrDefault();
+
+                if (checkclub != null)
+                    return Conflict("Esse clube já existe!");
+
+
+                var clubMap = _mapper.Map<Club>(clubCreate);
+
+                if (!_clubRepository.CreateClub(clubMap))
+                {
+                    ModelState.AddModelError("", "Algo deu errado durante o salvamento =(");
+                    return StatusCode(500, ModelState);
+                }
+
+                return CreatedAtAction(nameof(GetClubById), new { clubId = clubCreate.Id }, clubCreate);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
 
 
-        [HttpPut("api/[controller]/club/{clubId}/stadium/{stadiumId}/associate")]
+        [HttpPut("club/{clubId}/stadium/{stadiumId}/associate")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
 
         public IActionResult AssociateClubStadium([FromRoute] int stadiumId, [FromRoute] int clubId)
         {
-            var club = _clubRepository.GetClubById(clubId);
-            var stadium = _stadiumRepository.GetStadiumById(stadiumId);
-
-            if (club == null || stadium == null ) 
+            try
             {
-                return NotFound(ModelState);
+                var club = _clubRepository.GetClubById(clubId);
+                var stadium = _stadiumRepository.GetStadiumById(stadiumId);
+
+                if (club == null || stadium == null ) 
+                    return NotFound(ModelState);
+
+                if(club.Stadium != null)
+                    return BadRequest("Já existe um estádio associado a essa clube");
+
+                if (!ModelState.IsValid)            
+                    return BadRequest(ModelState);
+
+
+                if(!_clubRepository.AssociateClubStadium(club, stadium))
+                {
+                    ModelState.AddModelError("", "Algo deu errado durante a alteração.");
+                    return StatusCode(500, ModelState);
+                }
+
+                return Ok("Estádio adicionado ao clube com sucesso");
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
 
-            if(club.Stadium != null)
-            {
-                return BadRequest("Já existe um estádio associado a essa clube");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            _clubRepository.AssociateClubStadium(club, stadium);
-
-            return Ok("Sucesso");
         }
 
 
@@ -314,25 +279,31 @@ namespace ASPDotnetFC.Controllers
         [ProducesResponseType(404)]
         public IActionResult UpdateClub(int clubId, [FromBody] ClubDto updatedClub)
         {
-
-            if (clubId != updatedClub.Id)
-                return NotFound(ModelState);
-
-            if (updatedClub == null)
-                return BadRequest(ModelState);
-            
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var clubMap = _mapper.Map<Club>(updatedClub);
-
-            if (!_clubRepository.UpdateClub(clubMap))
+            try
             {
-                ModelState.AddModelError("", "Ocorreu um erro na sua tentativa de atualizar o clube!");
-                return StatusCode(500, ModelState);
-            }
+                if (clubId != updatedClub.Id)
+                    return NotFound(ModelState);
 
-            return Ok("Clube atualizado com sucesso!");
+                if (updatedClub == null)
+                    return BadRequest(ModelState);
+            
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var clubMap = _mapper.Map<Club>(updatedClub);
+
+                if (!_clubRepository.UpdateClub(clubMap))
+                {
+                    ModelState.AddModelError("", "Ocorreu um erro na sua tentativa de atualizar o clube!");
+                    return StatusCode(500, ModelState);
+                }
+
+                return Ok("Clube atualizado com sucesso!");
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
 
@@ -342,22 +313,29 @@ namespace ASPDotnetFC.Controllers
         [ProducesResponseType(200)]
         public IActionResult DeleteClub(int clubId)
         {
-            var club = _clubRepository.GetClubById(clubId);
+            try
+            {
+                var club = _clubRepository.GetClubById(clubId);
 
-            if(club == null)
-                return NotFound(ModelState);
+                if(club == null)
+                    return NotFound(ModelState);
             
 
-            if (!ModelState.IsValid) 
-                return BadRequest(ModelState);
+                if (!ModelState.IsValid) 
+                    return BadRequest(ModelState);
 
-            if (!_clubRepository.DeleteClub(club))
-            {
-                ModelState.AddModelError("", "Algo deu errado durante a exclusão.");
-                return StatusCode(500, ModelState); 
+                if (!_clubRepository.DeleteClub(club))
+                {
+                    ModelState.AddModelError("", "Algo deu errado durante a exclusão.");
+                    return StatusCode(500, ModelState); 
+                }
+
+                return Ok("Clube excluído");
             }
-
-            return Ok("Clube excluído");
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         } 
     }
 }

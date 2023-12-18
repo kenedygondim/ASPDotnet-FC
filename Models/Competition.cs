@@ -14,8 +14,6 @@ namespace ASPDotnetFC.Models
         public required string FirstEdition { get; set; }
         public  bool? IsContinental { get; set; }
         public  bool? IsWorldwide {  get; set; }
-
-        [JsonIgnore]
         public virtual ICollection<ClubCompetition>? ClubCompetitions { get; set; }
          
     }

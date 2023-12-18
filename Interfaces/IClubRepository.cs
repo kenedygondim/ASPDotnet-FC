@@ -12,12 +12,6 @@ namespace ASPDotnetFC.Interface
 
         Club GetClubByName (string name);
 
-        int GetFoundationYear(int Id);
-
-        string GetCountryName (int Id);
-
-        Stadium GetStadium(int Id);
-
         bool CreateClubWithCompetition(int competitionId, Club club);
 
         bool CreateClub(Club club);

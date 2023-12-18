@@ -26,28 +26,36 @@ namespace ASPDotnetFC.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
+        [ProducesResponseType(409)]
         public IActionResult AssociateClubCompetition([FromRoute ]int clubId, [FromRoute] int competitionId) 
         {
-            var club = _clubRepository.GetClubById(clubId);
-            var competition = _competitionRepository.GetCompetition(competitionId);
-            var clubcompetitions = _clubCompetitionRepository.GetOne(clubId, competitionId);
+            try
+            {
+                var club = _clubRepository.GetClubById(clubId);
+                var competition = _competitionRepository.GetCompetition(competitionId);
+                var clubcompetitions = _clubCompetitionRepository.GetOne(clubId, competitionId);
 
-            if (club == null)
-                return NotFound("Esse clube não existe.");
+                if (club == null)
+                    return NotFound("Esse clube não existe.");
 
-            if (competition == null)
-                return NotFound("Essa liga não existe.");
+                if (competition == null)
+                    return NotFound("Essa liga não existe.");
 
-            if (clubcompetitions != null)
-                return BadRequest("Esse clube já está associado a liga.");
+                if (clubcompetitions != null)
+                    return Conflict("Esse clube já está associado a liga.");
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
 
-            _clubCompetitionRepository.AssociateClubCompetition(competition, club);
+                _clubCompetitionRepository.AssociateClubCompetition(competition, club);
 
-            return Ok();
+                return Ok("Sucesso. Clube associado à competição!");
+            }
+
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
-
     }
 }
